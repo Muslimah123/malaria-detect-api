@@ -1,0 +1,17 @@
+
+node_modules
+npm-debug.log
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+logs
+.git
+.gitignore
+README.md
+uploads/*
+!uploads/.gitkeep
+!uploads/original/.gitkeep
+!uploads/thumbnails/.gitkeep
+!uploads/patches/.gitkeep
