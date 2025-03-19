@@ -50,30 +50,97 @@ exports.processImagePatches = async (req, res, next) => {
       }
     });
     
-    // Process the image asynchronously
-    processImage(imageId)
-      .then(patches => {
-        console.log(`Processed image ${imageId} with ${patches.length} patches`);
+    try {
+      // Process the image synchronously to ensure it completes
+      logger.info(`Starting image processing for image ${imageId}`);
+      const patches = await processImage(imageId);
+      
+      if (patches && patches.length > 0) {
+        logger.info(`Successfully processed image ${imageId} with ${patches.length} patches`);
         
         // Update sample status
-        Sample.update(
+        await Sample.update(
           { status: 'ready_for_analysis' },
           { where: { id: image.sampleId } }
         );
-      })
-      .catch(error => {
-        console.error(`Failed to process image ${imageId}:`, error);
-        
-        // Update sample status on error
-        Sample.update(
-          { status: 'failed' },
-          { where: { id: image.sampleId } }
-        );
-      });
+      } else {
+        throw new Error(`No patches were generated for image ${imageId}`);
+      }
+    } catch (processingError) {
+      logger.error(`Failed to process image ${imageId}:`, processingError);
+      
+      // Update sample status on error
+      await Sample.update(
+        { status: 'failed' },
+        { where: { id: image.sampleId } }
+      );
+    }
   } catch (error) {
     next(error);
   }
 };
+
+// /**
+//  * @desc    Start image processing (patching)
+//  * @route   POST /api/analysis/process-image/:imageId
+//  * @access  Private
+//  */
+// exports.processImagePatches = async (req, res, next) => {
+//   try {
+//     const { imageId } = req.params;
+    
+//     // Check if image exists
+//     const image = await SampleImage.findByPk(imageId);
+//     if (!image) {
+//       return next(new ErrorResponse(`Image not found with id ${imageId}`, 404));
+//     }
+    
+//     // Check if patches already exist
+//     const existingPatches = await ImagePatch.count({ where: { imageId } });
+//     if (existingPatches > 0) {
+//       return next(new ErrorResponse(`Image has already been processed with ${existingPatches} patches`, 400));
+//     }
+    
+//     // Update sample status
+//     await Sample.update(
+//       { status: 'processing' },
+//       { where: { id: image.sampleId } }
+//     );
+    
+//     // Return a 202 Accepted response - processing will continue asynchronously
+//     res.status(202).json({
+//       success: true,
+//       message: 'Image processing started',
+//       data: {
+//         imageId,
+//         status: 'processing'
+//       }
+//     });
+    
+//     // Process the image asynchronously
+//     processImage(imageId)
+//       .then(patches => {
+//         console.log(`Processed image ${imageId} with ${patches.length} patches`);
+        
+//         // Update sample status
+//         Sample.update(
+//           { status: 'ready_for_analysis' },
+//           { where: { id: image.sampleId } }
+//         );
+//       })
+//       .catch(error => {
+//         console.error(`Failed to process image ${imageId}:`, error);
+        
+//         // Update sample status on error
+//         Sample.update(
+//           { status: 'failed' },
+//           { where: { id: image.sampleId } }
+//         );
+//       });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 
 /**
  * @desc    Get all patches for an image

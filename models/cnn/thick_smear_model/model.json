@@ -1,0 +1,12 @@
+{
+  "format": "simplified",
+  "generatedBy": "placeholder",
+  "inputShape": [
+    32,
+    32,
+    1
+  ],
+  "outputShape": [
+    1
+  ]
+}

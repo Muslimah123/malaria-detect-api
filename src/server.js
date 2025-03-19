@@ -3,6 +3,8 @@ require('dotenv').config();
 const app = require('./app');
 const { testConnection } = require('./config/database');
 const logger = require('./config/logger');
+const ensureModelDirectories = require('./utils/ensureModelDirectories');
+
 
 // Set port
 const PORT = process.env.PORT || 5000;
@@ -10,6 +12,8 @@ const PORT = process.env.PORT || 5000;
 // Initialize server
 const startServer = async () => {
   try {
+    // Ensure model directories exist
+    ensureModelDirectories();
     // Test database connection
     await testConnection();
     
